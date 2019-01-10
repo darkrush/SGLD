@@ -1,0 +1,18 @@
+\section{Results and Discussion}
+\subsection{Experiment setting}
+We choose MontainCar\_continous(MC) as a deceptive reward task, SparseHalfCheetah(SHC) as a sparse reward task,and HalfCheetah(HC) as well defined task.
+
+We use Ubuntu16.04 on XX CPU+XX GPU. We use gym XX + mujoco 1.5.1
+\subsection{Sample critic with uncertainty}
+We rollout some transitions in MC, and plot the state point in "position-velocity". Then we train a critic network with these data by Adam optimizer and SGLD sampler. In both cases we start with an random initialized network and pre-train the critic network for XX steps to make sure convergence. After preparation, we further optimize the network for XX steps, and store the copy of critic network after each optimize step as one sample. BalaBala....
+
+We can see SGLD can sample critic which have high uncertainty on the periphery state domain.
+
+\subsection{Exploration in sparse or deceptive tasks}
+
+We compared the effects of various exploration methods on the MC and SHC tasks.
+
+\subsection{Exploration in well defined tasks}
+
+We compared the effects of various exploration methods on the HC task.
+

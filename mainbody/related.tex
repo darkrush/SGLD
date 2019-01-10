@@ -1,0 +1,10 @@
+\section{Related works}
+As deep learning applied in reinforcement learning, reinforcement learning shows excellent performance in more complex tasks. However, as tasks become more complex, such as continuous state-action space and sparse/deceptive rewards, the exploration strategy becomes the key to improving the performance of the algorithm.
+
+Random search: Perturb action exploration such as $\epsilon$-greedy, action space noise, perturb parameter exploration such as parameter space noise, noisy network. These methods make little use of the information in existing rollout data.
+
+Count-base: This kind of methods first evaluate the frequency of the agent accesses each state, by a density model or do 'pseudo-count' , and then drives the agent to explore the state of fewer visits through extra bonus. But additional rewards may affect the learning of the original goal.
+
+Thompson Sampling: Also named probability matching. Parameters of value estimation model are sampled follow a posterior distribution, and use this specific sample to make decision ( Q-learning like or actor-critic way). It is uneconomical to calculate exact posterior probability function, usually using the approximation method to generate posterior sampling such as: dropout, VI, bootstrap ...
+
+SGLD:

@@ -1,0 +1,50 @@
+\section{Method}
+\subsection{Deep Deterministic Policy Gradient}
+DDPG is an actor-critic algorithm. Describe in Alg \ref{alg:DDPG}
+\begin{algorithm}[tb]
+   \caption{Deep Deterministic Policy Gradient}
+   \label{alg:DDPG}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} environment $E$, critic $Q(s,a|\theta^Q)$, actor $\mu(s|\theta^\mu)$, exploration strategy $\tilde\mu \leftarrow f(\mu)$
+   \STATE Initialize replay buffer $D = \emptyset$.
+   \STATE Initialize target network $Q'= Q$, $\mu'= \mu$.
+   \FOR{1 {\bfseries to} cycle\_number}
+   \STATE Apply exploration strategy $\tilde\mu \leftarrow f(\mu)$
+   \STATE Roll-out data $d_t$ from $E$ by $\tilde\mu$ and $D \leftarrow D\cup {d_t}$
+
+   \FOR{1 {\bfseries to} train\_steps}
+   \STATE Sample data batch $\{d_t=(s_t,a_t,r_t)\}$ from $D$
+   \STATE $L^Q=\sum(Q'(s_{t+1},\mu'(s_{t+1}))+r_t-Q(s_t,a_t))^2$
+   \STATE $L^\mu=-\sum Q(\mu(s_t))$
+   \STATE $\theta^Q \leftarrow \theta^Q - \alpha^Q\cdot\nabla_{\theta^Q} L^Q$
+   \STATE $\theta^\mu \leftarrow \theta^\mu -\alpha^\mu\cdot\nabla_{\theta^\mu} L^\mu$
+   \STATE Soft update target network $Q'$ and $\mu'$
+   \ENDFOR
+   \ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Stochastic Gradient Langevin Dynamic}
+SGLD is an MCMC sampler work in SGD framework.
+\[\Delta\theta =\frac{\epsilon}{2}\frac{N}{n}\sum_{i=1}^{n}\nabla_\theta\log p(d_i|\theta)+\frac{\epsilon}{2}\nabla_\theta\log p(\theta)+\mathcal{N}(0,\epsilon) \]
+Where $\epsilon$ is the learning rate, $N$ is size of data set  and $n$ is batch size. $\nabla_\theta p(d_i|\theta)$ is the data like-hood term, which corresponding to gradient of loss. $\nabla_\theta p(\theta)$ is prior probability term, it is equivalent to L2 regularization if $p(\theta)\sim\mathcal{N}(0,\sigma^2)$. And $\mathcal{N}(0,\epsilon)$ term make SGLD can sample parameters with $\theta \sim p(\theta|D)$
+
+Some result for data point regression by SGD, SGLD, bootstrap, dropout.
+ 
+\subsection{SGLD in DDPG}
+Original DDPG uses Adam optimizer to update the parameters of critic network $\theta^Q$ to minimize Bellman error. We replace the Adam optimizer by SGLD to do Thompson sampling with $\theta^Q \sim p(\theta | D)$. In order to maintain the same settings as the original DDPG, we set $p(d_i|\theta)=\exp(-L^Q)$ to match the MSE loss and set $p(\theta)\sim\mathcal{N}(0,\sigma^2)$ to match the L2 regularization on critic network.
+\begin{itemize}
+\item Why we use preconditioned SGLD.
+\item Why and how we do learning rate decay.
+\end{itemize}
+
+\subsection{Further follow posterior distribution}
+In original DDPG algorithm, the target networks are the $\tau$-moving average of parameters of actor and critic. After each gradient descent step on actor and critic ,the target networks are "soft updated" by equation (\ref{eq:soft}).
+\begin{equation}
+\label{eq:soft} 
+\begin{aligned}
+\theta^{Q'} = (1-\tau)\theta^{Q'}+\tau\theta^Q\\
+\theta^{\mu'} = (1-\tau)\theta^{\mu'}+\tau\theta^\mu
+\end{aligned}
+\end{equation}
+The optimized object for the critic in one cycle is minimizing Bellman error, which is associated with both data in replay buffer and the target network. Constantly updating the target during the training step will hurt the process of sampling from the posterior. In order to sample critic from posterior distribution more strictly, we remain the target unchanged in one cycle and do "hard update",directly copy parameters of actor and critic to target networks.
