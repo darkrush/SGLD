@@ -1,18 +1,168 @@
-\section{Results and Discussion}
-\subsection{Experiment setting}
-We choose MontainCar\_continous(MC) as a deceptive reward task, SparseHalfCheetah(SHC) as a sparse reward task,and HalfCheetah(HC) as well defined task.
+\section{Computational Experiment}
+In this section, we select MountainCar, SparseHalfCheetah and HalfCheetah three tasks as benchmarks to evaluate the method we proposed, representing deceptive rewards, sparse rewards, and well-defined tasks. The vanilla Deep Deterministic Policy Gradient algorithm was used as the no exploration baseline and implemented the action noise, parameter noise version as a comparison to our method. By visualizing the variance of the critic in the state-action space, we demonstrate that SGLD-based exploration strategy generate intrinsic motivation in sparse environments. The training results of the 4 methods on the three benchmarks are then given and compared. We used the same settings for all tasks and achieved the same results as the other methods, and some of the tasks exceeded. The evaluation results of the four methods on the three benchmarks are given and compared. We used uniform settings on all three tasks and solved all the tasks, surpassing other methods.
 
-We use Ubuntu16.04 on XX CPU+XX GPU. We use gym XX + mujoco 1.5.1
-\subsection{Sample critic with uncertainty}
-We rollout some transitions in MC, and plot the state point in "position-velocity". Then we train a critic network with these data by Adam optimizer and SGLD sampler. In both cases we start with an random initialized network and pre-train the critic network for XX steps to make sure convergence. After preparation, we further optimize the network for XX steps, and store the copy of critic network after each optimize step as one sample. BalaBala....
+\subsection{Experiment Setting}
+For each task, we run the training process for six times with different random seeds (which are same for different exploration strategies). For each training process, we train the agent with $1\times10^6$ transition data, and evaluate the agent with the learning policy(different from the rollout policy) for 10 times to get the average value of non-discount total return. More experiment setting is avaliable in Appendix \ref{apdx:detail}.
 
-We can see SGLD can sample critic which have high uncertainty on the periphery state domain.
+\subsubsection{CMC,HC,SHC}
+We selected three continuous state-action space control tasks with different reward attributes as benchmarks, and all environments were modified from the original gym environments.
 
-\subsection{Exploration in sparse or deceptive tasks}
+\textbf{Continuous MountainCar (CMC)}: In the CMC, the agent needs to control a car from the bottom of the valley to the goal on the mountain top. The agent obtained reward $r = -\alpha*||\vec{a_t}||^2_2 + r_{goal}$ in each time step and the goal reward $r_{goal}=100$ only if the car reach the goal or zero otherwise. The car needs to climb the left side first and then rush to right to reach the top of the mountain, otherwise it can only oscillate back and forth in the valley. This is a task with both sparse rewards and action penalties.
 
-We compared the effects of various exploration methods on the MC and SHC tasks.
+\textbf{HalfCheetah (HC)}: As described in section\ref{sec:tasks}, the agent needs to control a half cheetah to run as fast as possible to the right with minimal control. This is a well defined task with the default $\alpha = 0.1$, but as $\alpha$ increases, exploration becomes more and more difficult.
 
-\subsection{Exploration in well defined tasks}
+\textbf{Sparse HalfCheetah (SHC)}: The SHC removes the action penalty from the HC and only receives a reward of 1 for each time step after the cheetah moves to the right beyond the distance $d$. This means that as $d$ increases, it is more difficult for any random strategy to get a non-zero reward.
 
-We compared the effects of various exploration methods on the HC task.
+\begin{figure}[htb]
+   \begin{center}   
+   \centerline{\subfigure[Continuous MountainCar]{\includegraphics[width=180pt]{figs/MC.jpg}}}
+   \centerline{\subfigure[HalfCheetah]{\includegraphics[width=180pt]{figs/HC.jpg}}}
+   \caption{Snapshot of the gym environment.}
+   \label{fig:MC}   
+   \end{center}
+\end{figure}
 
+\subsubsection{Deep Deterministic Policy Gradient}
+\textbf{Deep Deterministic Policy Gradient (DDPG)} is an off-policy actor-critic algorithm that uses a replay buffer and two target networks \cite{DDPG}. In each training cycle, the agent rollouts some  transition datas from the environment $E$ and stores them into the replay buffer $D$. Then calculate the Bellman Error by equation (\ref{eq:bellman}) with the target network $Q'$ and $\mu'$ and optimize the parameters $\theta^{Q}$ of the critic $Q$ in several training steps. And optimize the parameters $\theta^{\mu}$ of the actor $\mu$ by the policy gredient estimated by the critic. The target network is soft updated at the end of each training step. The details of the algorithm are described in Alg \ref{alg:DDPG}.
+\begin{equation}
+   \label{eq:bellman} 
+   \begin{aligned}
+   L^Q=\mathbb{E}_{s_t\sim\rho^{\tilde\mu},a_t\sim\tilde\mu,r_t\sim E}[(Q(s_t,a_t)-y_t)^2]\\
+   \text{where\quad}  y_t = \gamma Q'(s_{t+1},\mu'(s_{t+1}))+r_t
+   \end{aligned}
+\end{equation}
+
+Since DDPG is an off policy algorithm, the rollout actor and the learning actor do not need to be the same, the exploration strategy $f(\cdot) : \mathbb{M} \rightarrow \mathbb{M}$, which $\mathbb{M}$ is the space of policy, commonly transforms the learning actor $\mu$ into a rollout actor $\tilde\mu$ to achieve exploration.
+
+\begin{algorithm}[htbp]
+   \caption{Deep Deterministic Policy Gradient}
+   \label{alg:DDPG}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} environment $E$, critic $Q(s,a|\theta^Q)$, actor $\mu(s|\theta^\mu)$, exploration strategy $\tilde\mu \leftarrow f(\mu)$
+   \STATE Initialize replay buffer $D = \emptyset$.
+   \STATE Initialize target network $Q'= Q$, $\mu'= \mu$.
+   \FOR{1 {\bfseries to} cycle\_number}
+   \STATE Apply exploration strategy $\tilde\mu \leftarrow f(\mu)$
+   \STATE Rollout data $d_t$ from $E$ by $\tilde\mu$ and $D \leftarrow D\cup {d_t}$
+
+   \FOR{1 {\bfseries to} train\_steps}
+   \STATE Sample data batch $\{d_t=(s_t,a_t,r_t)\}$ from $D$
+   \STATE $L^Q=\sum(\gamma Q'(s_{t+1},\mu'(s_{t+1}))+r_t-Q(s_t,a_t))^2$
+   \STATE $L^\mu=-\sum Q(\mu(s_t))$
+   \STATE $\theta^Q \leftarrow \theta^Q - \alpha^Q\cdot\nabla_{\theta^Q} L^Q$
+   \STATE $\theta^\mu \leftarrow \theta^\mu -\alpha^\mu\cdot\nabla_{\theta^\mu} L^\mu$
+   \STATE Soft update target network $Q'$ and $\mu'$
+   \ENDFOR
+   \ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+In original DDPG algorithm, the target networks are the $\tau$-moving average of parameters of actor and critic. After each gradient descent step on actor and critic ,the target networks are "soft updated" by equation (\ref{eq:soft}).
+\begin{equation}
+\label{eq:soft} 
+\begin{aligned}
+\theta^{Q'} = (1-\tau)\theta^{Q'}+\tau\theta^Q\\
+\theta^{\mu'} = (1-\tau)\theta^{\mu'}+\tau\theta^\mu
+\end{aligned}
+\end{equation}
+
+The optimized object for the critic in one cycle is minimizing Bellman error in equation (\ref{eq:bellman}), which is associated with both data in replay buffer and the target network. Constantly updating the target during the training step will make the process of sampling from the posterior distribution inconsistently. In order to sample critic from posterior distribution more strictly, we remain the target unchanged in one cycle and do "hard update",directly copy parameters of actor and critic to target networks. Under this setting, the expectation policy gradient will be intergrated over both $s_t\sim\rho$ and $\theta^Q\sim p(\theta^Q|D)$ as equation (\ref{eq:pg}). 
+\begin{equation}
+   \label{eq:pg} 
+   \begin{aligned}
+   \nabla_{\theta^\mu}\mathbb{E}[L^\mu|D] = \mathbb{E}_{s_t\sim\rho,\theta^Q\sim p(\theta^Q|D)}[\nabla_{\theta^\mu}L^\mu]\\
+   \end{aligned}
+\end{equation}
+It is proven to be the correct form to estimate policy gradient with critics sampled from posterior distribution in \cite{dropoutInference}.
+
+\subsection{Intrinsic Motivation in State-Action space}
+In the MC task, the state space is a two-dimensional space in which the position and velocity are formed. To show how SGLD is intrinsically motivated, we visualize the uncertainty of Q(s,a). The agent fixes a=1 and rollsout the data, the car will reciprocate, and the observed data is a circle in the phase space. We then use this data to train the Adam version and the SGLD version of the DDPG, and record 50 critic samples, collect the surfaces of these samples on the State plane, and count the variance at each point, as shown in figure \ref{fig:stateaction}.
+
+\begin{figure}[htb]
+   \begin{center}   
+   \centerline{\includegraphics[width=\columnwidth,trim=100 280 100 280,clip]{figs/mc_sgld_state.pdf}}
+   \caption{The variance plot of critics sampled by SGLD on Continuous MountainCar}
+   \label{fig:stateaction}   
+   \end{center}
+\end{figure}
+As can be seen from the figure, the Adam version of the critic converges to a unique output, and the difference above the entire plane is almost 0. The slash version of the SGLD has a smaller variance near the data circle, and in the far away area. Large variance. This shows that using SGLD can indeed produce a posteriori sampling of critic.
+
+\subsection{Exploration and Exploitation}
+We evaluate the performance of our method on MC, HC and SHC and compared it with the results of no exploration baseline, action noise and parameter noise.
+
+On the MC, including no action penalty, no exploration and parameter noise all failed. The action noise and SGLD methods succeeded with high probability under all conditions. It can be observed that as the action penalty increases, the probability of the SGLD solving the task decreases, and the action noise is almost unaffected. This is because the OU process can almost always ignore the subject strategy to achieve the goal in the case of std=0.6, which leads to unconditional target reward, but this success is difficult to extend to other tasks.
+
+\begin{table}[htbp]
+   \caption{Number of Succeeded Seed on Continuous MountainCar}
+   \label{tab:mc}
+   \vskip 0.15in
+   \begin{center}
+   \begin{tabular}{lcccc}
+   \toprule
+   $\alpha$ & Baseline & SGLD & AN & PN \\
+   \midrule
+      0     & 0        & 6    & 6  & 0 \\
+      0.1   & 0        & 6    & 5  & 0 \\
+      0.2   & 0        & 5    & 6  & 0 \\
+      0.5   & 0        & 4    & 6  & 0 \\
+      0.1   & 0        & 3    & 6  & 0 \\
+   \bottomrule
+   \end{tabular}
+   \end{center}
+   \vskip -0.1in
+   \end{table}
+
+On the HC, as the action penalty increases, the task becomes difficult to explore. Under the settings of alpha=0, 0.1 and 0.2, all algorithms showed a consistent learning curve despite different learning speeds. It can be assumed that under this setup all algorithms work. When alpha=0.5 and 1, the no exploration and action noise methods almost fail, and the parameter noise SGLD method can still maintain the same learning curve as before. We think this is because the rollout policy of the two exploration methods gives the same action in the same state, and the action noise can not give a consistent action, and the no exploration is difficult to explore due to the action penalty.
+
+\begin{table}[htbp]
+   \caption{Mean Return on HalfCheetah}
+   \label{tab:HC}
+   \vskip 0.15in
+   \begin{center}
+   \begin{tabular}{lcccc}
+   \toprule
+   $\alpha$ & Baseline & SGLD & AN   & PN \\
+   \midrule
+   0        & 3843     & 3742 & 3454 & 3776 \\
+   0.1      & 2813     & 4091 & 1683 & 2977 \\
+   0.2      & 2352     & 3678 & 931  & 2801 \\
+   0.5      & 214      & 2464 & 3    & 1641 \\
+   1        & 481      &  984 & 684  & 1605 \\
+   \bottomrule
+   \end{tabular}
+   \end{center}
+   \vskip -0.1in
+   \end{table}
+%      0     & $3843\pm1669$& $3742\pm901$& $3454\pm645$& $3776\pm1340$ \\
+%0.1   & $2813 \pm 1495$   & $4091 \pm 831$ & $1683\pm823$  & $2977\pm1714$ \\
+%0.2 & $2352\pm1399$ & $3678\pm689$ & $931\pm798$ & $2801\pm2298$\\
+%0.5 & $214\pm650$ & $2464\pm1883$ & $3\pm19$ & $1641\pm2596$ \\
+
+
+On the SHC, at the distance d=1, the three exploration strategies successfully solved the problem, Even the no exploration baseline has one seed reached non-zero rewards. As the interval $d$ increases, the probability that baseline and action noise can explore non-zero rewards is getting lower and lower. But SGLD and parameter noise are stable to solve the problem, which further confirms the conclusion about deep exploration that we obtained on HC.
+
+\begin{table}[htbp]
+   \caption{Number of Succeeded Seed on Sparse HalfCheetah}
+   \label{tab:shc}
+   \vskip 0.15in
+   \begin{center}
+   \begin{tabular}{lcccc}
+   \toprule
+       d    & Baseline & SGLD & AN & PN \\
+   \midrule
+      1     & 1        & 6    & 6  & 6 \\
+      2.5   & 0        & 5    & 1  & 6 \\
+      5     & 0        & 6    & 0  & 5 \\
+      10    & 0        & 4    & 0  & 5 \\
+      20    & 0        & 4    & 0  & 2 \\
+   \bottomrule
+   \end{tabular}
+   \end{center}
+   \vskip -0.1in
+   \end{table}
+
+   In conclusion: The Action Noise method succeeded on MC, but was unable to solve difficult($d\ge5$) SHC tasks. The Parameter Noise method succeeded in the SHC task, but failed on the MC task. The baseline almost failed in all tasks. Our method solved all tasks with a high probability of all settings (minimum 3/6, average 4.9/6). All methods, including the baseline method, can learn to run continuously on the HC with light action penalty. However, as the action penalty increases, the total return attenuation of our method and parameter noise method is slower than the baseline and Action noise. The total return of our method and parameter noise method is less reduced, while significant reductions were observed in experiments of baseline and action noise. This shows that our approach has the best generalization ability on all tasks, and can solve difficult problems and well-defined problems at the same time.
+
+   \subsection{Application Friendly}
+   It is worth noting that our method does not introduce any hyperparameters. In the experiments shown above, we use the same settings in all tasks, and achieved success in both well-defined tasks and hard tasks. Which means lower cost of tuning hyperparameters.
+   Our approach also introduces little additional computational cost. We ran our method on the MC and compared it to the baseline method. The results show that our method has a close running time (XX: XX) compared to the baseline, which proves that our method is computational efficient.

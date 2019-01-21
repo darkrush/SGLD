@@ -53,13 +53,15 @@
 \begin{icmlauthorlist}
 \icmlauthor{Jiantao Qiu}{thu}
 \icmlauthor{Zhaoran Wang}{NU}
+\icmlauthor{Jian Peng}{UIUC}
 \icmlauthor{Yu Wang}{thu}
 \end{icmlauthorlist}
 
 \icmlaffiliation{thu}{Department of Electronic Engineering, University of Tsinghua University, Haidian, Beijing, China}
-\icmlaffiliation{NU}{Industrial Engineering and Management Sciences, Northwestern University, Evanston, Illinois, USA}
+\icmlaffiliation{UIUC}{Department of Computer Science, University of Illinois at Urbana-Champaign, USA}
+\icmlaffiliation{NU}{Industrial Engineering and Management Sciences, Northwestern University, Evanston, IL, USA}
 
-\icmlcorrespondingauthor{Jiantao Qiu}{qjt15@mails.tsinghua.edu.cn}
+\icmlcorrespondingauthor{Zhaoran Wang}{zhaoranwang@gmail.com}
 
 
 % You may provide any keywords that you
@@ -82,13 +84,11 @@
 %\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
 
 \begin{abstract}
-This document provides a basic paper template and submission guidelines.
-Abstracts must be a single paragraph, ideally between 4--6 sentences long.
-Gross violations will trigger corrections at the camera-ready phase.
+Thompson Sampling method can achieve effective exploration in the reinforcement learning, but many existing works fail in sparse/deceptive tasks. The factors of "zero reward" and "action penalty" prevent agents from exploring more states in sparse/deceptive environment, which makes the environment difficult to explore. In this paper, we propose an Thompson sampling exploration strategy based on Stochastic Gradient Langevin Dynamics for Actor-critic algorithm, which can archive exploration in a sparse/deceptive environment and overcomes the shortcomings of existing exploration methods. We measured the performance of our method in the three benchmarks: Countinous-MountainCar, SparseHalfCheetah, and HalfCheetah, which represent different attributes. The results show that our approach can solve more tasks, have higher sample efficiency, and lower computational cost. Our code is open source on github.com/anonymousforcodesubmit/SGLD.
 \end{abstract}
 
 \input{mainbody/introduction.tex}
-\input{mainbody/related.tex}
+\input{mainbody/background.tex}
 \input{mainbody/method.tex}
 \input{mainbody/result.tex}
 \input{mainbody/conclusion.tex}
@@ -98,10 +98,17 @@ Gross violations will trigger corrections at the camera-ready phase.
 % references without citing it in the main text, use \nocite
 %\nocite{langley00}
 
+%\section*{Acknowledgements}
+%We thank XXXXXX
+
+
 \bibliography{reference}
 \bibliographystyle{icml2019}
 
 
+\newpage
+\onecolumn
+\input{mainbody/appendix.tex}
 \end{document}
 
 

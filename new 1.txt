@@ -1,0 +1,21 @@
+4. Computational Experiment
+在本节中，SparseHC，MC，和HC三个task作为benchmark评估我们的方法，分别代表稀疏奖励，欺骗性奖励和良好定义任务。我们使用DDPG基本算法作为no exploration Baseline，通过第三节中的方法改造为SGLD版本，并与action noise，parameter noise 进行了对比。我们通过可视化critic在State-action空间上的方差，展示了基于SGLD的探索策略在稀疏环境下产生内生动机的能力。随后给出了在三个benchmark上的4中方法的训练结果并进行了对比。我们对所有的任务使用了同样的设置，并取得了与其他方法同等，部分任务上超过的结果。最后我们通过测量wall clock时间证明了我们的方法相对baseline方法几乎没有增加时间。
+4.1 Experiment Setting
+我们的测试用机器搭载了一块Intel i9-7920XGPU和两块GTX1080Ti。操作系统是Ubuntu16.04LTS，并使用torch0.4.1+gym0.10.8+mujoco-py1.50.1.62+mujoco150的配置。
+4.1.1 MC,HC,SHC
+我们选择了三个具有不同奖励属性的连续State-Action空间的控制任务作为测试用例，所有的环境从GYM的原始任务中修改得到。
+Continuous MountainCar：在Continuous MountainCar任务中agent需要控制一辆小车从山谷底冲到山顶上的目标处。在每个时间步内获得的动作惩罚为r=-α*a^2，默认α=0.1。在达到goal时获得奖励r=100并且立马结束一个episode。小车需要先向左冲上山坡再向右冲上山顶，否则只能在山谷里来回震荡。这是一个同时具有稀疏奖励和动作惩罚的任务。
+HC：在HalfCheetah任务中，如3.2中所述，agent需要控制一个半猎豹向右方尽可能的快跑，并同时受到向右奖励的引导和动作惩罚。在默认$\alpha = 0.1$的情况下这是一个良好引导的任务，但随着$alpha$的增大，探索会变得越来越困难。
+SHC：SHC相对HC修改了奖励的设置，去除了动作惩罚，并且仅当猎豹的横向位移大于d之后每个时间步获得1的奖励。这意味着随着d的增大，任意的随机策略不再容易得到非零的奖励，从而变得更加困难。
+
+4.1.2 DDPG
+4.2 Intrinsic Motivation in State-Action space
+在MC任务中，state空间是位置和速度张成的二维空间。为了展示SGLD是如何产生内在动机的，我们将Q（s,a）的不确定度可视化。agent固定a=1并rollout数据，小车会往复运动，观测到的数据在相空间内是一个圈。然后我们使用这些数据训练Adam版本和SGLD版本的DDPG，并记录50个critic的采样，收集这些采样在State平面上的曲面，并统计每一个点上的方差，结果如图所示。
+从图中可以看到，Adam版本的critic收敛到唯一的输出，在整个平面上方差几乎是0.而SGLD版本的critic，在数据点圈附近有较小的方差，而在远离的区域里有较大的方差。这说明使用SGLD确实可以产生critic的后验采样。
+4.3 Exploration and Exploitation
+我们使用在MC，HC和SHC上测试了我们的算法的性能，并与baseling，AN，PN的结果进行了比较。
+在MC上，包括不施加动作惩罚的情况下，no exploration和parameter noise全部失败。而action noise和SGLD方法在所有的条件下以高概率取得了成功。可以观察到随着动作惩罚的逐渐加大，SGLD解决任务的概率降低，而action noise几乎不受影响。这是由于OU过程在std=0.6的情况下几乎总是可以无视主体策略达到目标，这导致了无条件的获得目标reward，然而这种成功很难扩展到其他任务上。
+
+在HC上，随着动作惩罚项的不断增大，任务从良好定义变的难以探索。在alpha=0，0.1和0.2的设置下，虽然学习速度不同，所有的算法都表现出一致的学习曲线。可以认为在这种设置下，所有的算法都起作用了。而当alpha=0.5和1时，no exploration和action noise方法几乎失败，而parameter noise的SGLD的方法仍然可以保持与原先一致的学习曲线。我们认为这是由于这两种探索方法的rollout policy在面对同样的状态给出相同的动作，而action noise无法给出一致的动作，no exploration则由于动作惩罚难以探索。
+在SHC上，在距离d=1时，三种探索策略都成功的解决了问题，即使是no explore也有一组随即种子探索到了非0奖励。而随着d的加大，action noise 可以探索到reward的概率逐渐降低，而SGLD和parameter noise则稳定的可以解决问题，这进一步佐证了我们在HC上最后的分析，即一致的动作产生deep exploration，从而在这样的任务中产生累计的探索效应。
+

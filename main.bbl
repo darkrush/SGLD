@@ -1,4 +1,4 @@
-\begin{thebibliography}{32}
+\begin{thebibliography}{28}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -11,11 +11,6 @@ Abadi, M., Barham, P., Chen, J., Chen, Z., Davis, A., Dean, J., Devin, M.,
   Ghemawat, S., Irving, G., Isard, M., et~al.
 \newblock Tensorflow: a system for large-scale machine learning.
 \newblock In \emph{OSDI}, volume~16, pp.\  265--283, 2016.
-
-\bibitem[Ahn et~al.(2012)Ahn, Korattikara, and Welling]{SGFS}
-Ahn, S., Korattikara, A., and Welling, M.
-\newblock Bayesian posterior sampling via stochastic gradient fisher scoring.
-\newblock \emph{arXiv preprint arXiv:1206.6380}, 2012.
 
 \bibitem[Azizzadenesheli et~al.(2018)Azizzadenesheli, Brunskill, and
   Anandkumar]{lastLayerBayes}
@@ -36,12 +31,6 @@ Bellemare, M., Srinivasan, S., Ostrovski, G., Schaul, T., Saxton, D., and
 \newblock Unifying count-based exploration and intrinsic motivation.
 \newblock In \emph{Advances in Neural Information Processing Systems}, pp.\
   1471--1479, 2016.
-
-\bibitem[Chen et~al.(2014)Chen, Fox, and Guestrin]{SGHMC}
-Chen, T., Fox, E., and Guestrin, C.
-\newblock Stochastic gradient hamiltonian monte carlo.
-\newblock In \emph{International Conference on Machine Learning}, pp.\
-  1683--1691, 2014.
 
 \bibitem[Chen et~al.(2015)Chen, Li, Li, Lin, Wang, Wang, Xiao, Xu, Zhang, and
   Zhang]{MXNet}
@@ -79,12 +68,6 @@ Henderson, P., Doan, T., Islam, R., and Meger, D.
 \newblock Bayesian policy gradients via alpha divergence dropout inference.
 \newblock \emph{arXiv preprint arXiv:1712.02037}, 2017.
 
-\bibitem[{Henderson} et~al.(2017){Henderson}, {Doan}, {Islam}, and
-  {Meger}]{henderson2017bayes}
-{Henderson}, P., {Doan}, T., {Islam}, R., and {Meger}, D.
-\newblock Bayesian policy gradients via alpha divergence dropout inference.
-\newblock \emph{NIPS Bayesian Deep Learning Workshop}, 2017.
-
 \bibitem[Houthooft et~al.(2016)Houthooft, Chen, Duan, Schulman, De~Turck, and
   Abbeel]{VIME}
 Houthooft, R., Chen, X., Duan, Y., Schulman, J., De~Turck, F., and Abbeel, P.
@@ -104,12 +87,6 @@ Lehman, J. and Stanley, K.~O.
   alone.
 \newblock \emph{Evolutionary computation}, 19\penalty0 (2):\penalty0 189--223,
   2011.
-
-\bibitem[Li et~al.(2016)Li, Chen, Carlson, and Carin]{pSGLD}
-Li, C., Chen, C., Carlson, D.~E., and Carin, L.
-\newblock Preconditioned stochastic gradient langevin dynamics for deep neural
-  networks.
-\newblock In \emph{AAAI}, volume~2, pp.\ ~4, 2016.
 
 \bibitem[Lillicrap et~al.(2015)Lillicrap, Hunt, Pritzel, Heess, and
   Wierstra]{DDPG}
