@@ -5,7 +5,6 @@
 % Recommended, but optional, packages for figures and better typesetting:
 \usepackage{amsmath}
 \usepackage{amsfonts}
-\usepackage{microtype}
 \usepackage{graphicx}
 \usepackage{subfigure}
 \usepackage{booktabs} % for professional tables
@@ -32,7 +31,7 @@
 \begin{document}
 
 \twocolumn[
-\icmltitle{Deep Exploration via Stochastic Gradient Langevin Dynamic  \\
+\icmltitle{Deep Exploration via Stochastic Gradient Langevin Dynamics  \\
            in Deep Reinforcement Learning}
 
 % It is OKAY to include author information, even for blind
@@ -63,7 +62,6 @@
 
 \icmlcorrespondingauthor{Zhaoran Wang}{zhaoranwang@gmail.com}
 
-
 % You may provide any keywords that you
 % find helpful for describing your paper; these are used to populate
 % the "keywords" metadata in the PDF but will not be shown in the document
@@ -84,7 +82,7 @@
 %\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
 
 \begin{abstract}
-Thompson Sampling method can achieve effective exploration in the reinforcement learning, but many existing works fail in sparse/deceptive tasks. The factors of "zero reward" and "action penalty" prevent agents from exploring more states in sparse/deceptive environment, which makes the environment difficult to explore. In this paper, we propose an Thompson sampling exploration strategy based on Stochastic Gradient Langevin Dynamics for Actor-critic algorithm, which can archive exploration in a sparse/deceptive environment and overcomes the shortcomings of existing exploration methods. We measured the performance of our method in the three benchmarks: Countinous-MountainCar, SparseHalfCheetah, and HalfCheetah, which represent different attributes. The results show that our approach can solve more tasks, have higher sample efficiency, and lower computational cost. Our code is open source on github.com/anonymousforcodesubmit/SGLD.
+Thompson sampling can often achieve effective exploration in reinforcement learning, but many existing works fail in tasks with sparse or deceptive rewards. In such tasks, issues such as ``diminishing reward'' and ``action penalty'' prevent agents from exploring more states. In this paper, we propose a Thompson sampling exploration strategy by integrating stochastic gradient Langevin dynamics with the actor-critic algorithm. The proposed exploration strategy achieves effective exploration in tasks with sparse or deceptive rewards and overcomes the shortcomings of existing exploration strategies. We evaluate the performance of our strategy in  three benchmarks: Continuous-Mountain-Car, Sparse-Half-Cheetah, and Half-Cheetah, which represent different attributes. The results show that our method has a greater generalization ability and meanwhile has little additional computational cost. Our code is available at \url{github.com/anonymousforcodesubmit/SGLD}. 
 \end{abstract}
 
 \input{mainbody/introduction.tex}
