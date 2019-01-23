@@ -4,7 +4,7 @@ In this section, we select Continuous MountainCar, SparseHalfCheetah and HalfChe
 \subsection{Experiment Setting}
 For each task, we run the training process for six times with different random seeds (which are same for different exploration strategies). For each training process, we train the agent with $1\times10^6$ transition data, and evaluate the agent with the learning policy(different from the rollout policy) for 10 times to get the average value of non-discount total return. More experiment setting is avaliable in Appendix \ref{apdx:detail}.
 
-\subsubsection{CMC,HC,SHC}
+\subsubsection{CMC, HC, and SHC}
 We selected three continuous state-action space control tasks with different reward attributes as benchmarks, and all environments were modified from the original gym environments \cite{gym}.
 
 \textbf{Continuous MountainCar (CMC)}\cite{MC}: In the CMC, the agent needs to control a car from the bottom of the valley to the goal on the mountain top. The agent obtained reward $r = -\alpha*||\vec{a_t}||^2_2 + r_{goal}$ in each time step and the goal reward $r_{goal}=100$ only if the car reach the goal or zero otherwise. The car needs to climb the left side first and then rush to right to reach the top of the mountain, otherwise it can only oscillate back and forth in the valley. This is a task with both sparse rewards and action penalties.
@@ -183,7 +183,7 @@ On the SHC, at the distance d=1, the three exploration strategies successfully s
 
 In conclusion: The action noise method succeeded on MC, but was unable to solve difficult ($d\ge5$) SHC tasks. The parameter noise method succeeded in the SHC task, but failed on the MC task. The baseline almost failed in all tasks. Our method solved all tasks with a high probability on all settings (minimum 3/6, average 4.9/6). All methods, including the baseline method, can learn to run continuously on the HC with light action penalty. However, as the action penalty increases, the total return attenuation of our method and parameter noise method is slower than the baseline and action noise. The total return of our method and parameter noise method is less reduced, while significant reductions were observed in experiments of baseline and action noise. The figures of all experiments are shown in Figure \ref{fig:allfigure}. This shows that our approach has the best generalization ability on all tasks, and can solve difficult problems and well-defined problems at the same time.
 
-\subsection{Application Friendly}
+\subsection{Application-Friendly}
 It is worth noting that our method does not introduce any hyper-parameters. In the experiments shown above, we use the same settings in all tasks, and achieved success in both well-defined tasks and hard tasks, which means lower cost on tuning hyper-parameters.
    
  Our approach also introduces little additional computational cost. We run our method on the HC and compared it to the baseline method. The total running time of the baseline is 5481s, and our method is 5875s. The results show that our method has a close running time compared to the baseline ($1.07\times$), which proves that our method is computational efficient.
