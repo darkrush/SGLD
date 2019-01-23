@@ -1,5 +1,5 @@
 \section{Deep Exploration via Langevin Dynamics}
-Under the Bayesian learning framework, there is one mathematical method that has both the "posterior sampling" and "parameter noise" properties, called Stochastic Gradient Langevin Dynamics. In this section, we will briefly introduce the SGLD and show how it can used to build an exploration strategy in actor-critic algorithms.
+Under the Bayesian learning framework, there is one mathematical method that has both the "posterior sampling" and "parameter noise" properties, called Stochastic Gradient Langevin Dynamics. In this section, we will briefly introduce the SGLD and show how to use it to build an exploration strategy in actor-critic algorithms.
 
 \subsection{Stochastic Gradient Langevin Dynamic}
 Stochastic Gradient Langevin Dynamic algorithm is an algorithm that can perform MCMC sampling by stochastic gradient descent + Gaussian noise \cite{SGLD}. For a parameter vector $\theta$ with a prior distribution $p(\theta)$ ,to draw a sample chain $\{\theta_1,\theta_2,\cdots\}$ follow $p(\theta|D)$ where $D=\{d_i\}^N_{i=1}$, the parameters should be updated as follow:
@@ -12,7 +12,7 @@ Stochastic Gradient Langevin Dynamic algorithm is an algorithm that can perform 
 \end{equation}
 Where $\epsilon$ is the learning rate, $n$ is the size of one mini-batch. 
 
-The basic SGLD algorithm updates all parameters with the same step size, which leads to slow mixing rate. In practice, we use pre-conditioned SGLD (pSGLD) instead, in which the step size is scaled by pre-conditioner $G_t$ as follow:
+The vanilla SGLD algorithm updates all parameters with the same step size, which leads to slow mixing rate. In practice, we use pre-conditioned SGLD (pSGLD) instead, in which the step size is scaled by pre-conditioner $G_t$ as follow:
 \begin{equation}
    \label{eq:psgld} 
    \begin{aligned}
@@ -29,12 +29,11 @@ Where $G_t$ is updated as the mean square term in RMSprop \cite{rmsprop}.
    \end{center}
 \end{figure*}
 
-%$\nabla_\theta p(d_i|\theta)$ is the data like-hood term, which corresponding to gradient of loss. $\nabla_\theta p(\theta)$ is prior probability term, it is equivalent to L2 regularization if $p(\theta)\sim\mathcal{N}(0,\sigma^2)$. And $\mathcal{N}(0,\epsilon)$ term make SGLD can sample parameters with $\theta \sim p(\theta|D)$
-To visualize the ability of pSGLD to characterization the uncertainty of posterior distribution when fitting data set, we trained a neural network with architecture of "20-ReLU-20-ReLU-1" by pSGLD on three toy datasets, left: $y=0$, mid: $y=-x^2$, right: $y=x^3-x$, and the results are shown in the Figure \ref{fig:three}. The dark curve is the mean of the curve clusters, and the light areas represent the standard deviation of the curve clusters. The results show that the curve samples of pSGLD are concentrated near the data points, while diverge in both positive and negative directions in areas far from the data, even on the all-zero data set.
+To visualize the ability of pSGLD to characterization the uncertainty of posterior distribution when fitting data set, we trained a neural network with the architecture of "20-ReLU-20-ReLU-1" by pSGLD on three toy datasets, left: $y=0$, mid: $y=-x^2$, right: $y=x^3-x$. The results are shown in Figure \ref{fig:three}. The dark curve is the mean of the curve clusters, and the light areas represent the standard deviation of the curve clusters. The results show that the curve samples of pSGLD are concentrated near the data points, while diverge in both positive and negative directions in areas far from the data, even on the all-zero data set.
 
-\subsection{Posterior sampling of critic}
+\subsection{Posterior Sampling of Critic}
 \label{sec:samplecritic}
-In Deep Actor Critic algorithm, the parameters of critic network $\theta^Q$ is updated by an SGD-like optimizer to minimize the MSE error $L^Q=\sum(R-V(S|\theta^Q))$. To replace the SGD-like optimizer by pSGLD sampler with minimal changes, we suppose that the likelihood term is $p(d_i|\theta^Q)\sim\exp(-L^Q)$ to match the Bellman error, and prior term is $p(\theta^Q)\sim \mathcal{N}(0,\sigma^2)$ to match the L2 regularization on critic network. Then the critic will be updated as follows:
+In the deep actor-critic algorithm, the parameters of critic network $\theta^Q$ is updated by an SGD-like optimizer to minimize the MSE error $L^Q=\sum(R-V(S|\theta^Q))$. To replace the SGD-like optimizer by pSGLD sampler with minimal changes, we suppose that the likelihood term is $p(d_i|\theta^Q)\sim\exp(-L^Q)$ to match the Bellman error, and prior term is $p(\theta^Q)\sim \mathcal{N}(0,\sigma^2)$ to match the L2 regularization on critic network. Then the critic will be updated as follows:
 \begin{equation}
    \label{eq:rlpsgld} 
    \begin{aligned}
@@ -50,7 +49,7 @@ It is worth noting that, for the off-policy algorithm with replay buffer, the si
       +\mathcal{N}(0,\epsilon_0\frac{n}{N} G_t)
    \end{aligned}
 \end{equation}
-The observed data is increasing as the learning process executes, which leads to the effect of the prior term and the noise term becomes weaker than the likelihood term. This is consistent with our common sense: The more data observed, the more concentrated the model is distributed towards the maximum likelihood estimate.
+The observed data is increasing as the learning process executes, which leads to the effect of the prior term and the noise term becomes weaker than the likelihood term. This phenomenon is consistent with our common sense: The more data observed, the closer the distribution of the model is to the maximum likelihood estimation distribution.
 \begin{algorithm}[htbp]
    \caption{Deep Actor Critic with SGLD}
    \label{alg:sgldac}
@@ -70,11 +69,11 @@ The observed data is increasing as the learning process executes, which leads to
 \end{algorithmic}
 \end{algorithm}
 \subsection{Exploration for Actor-Critic Algorithm}
-The actor-critic algorithm using SLGD is shown in Algorithm \ref{alg:sgldac}. Critic $V(s|\theta^V)$ is continuously sampled by SGLD, so the last critic in the network is a sample following $p(\theta^V|D)$ at any time. In the rollout phase, the current actor $\pi$ is copied to $\tilde\pi$, then update $\tilde\pi$ use the policy gradient generated by the last critic. In actor-critic algorithm, the critic does not make decisions directly, so we optimize the copy of the current actor with the last critic sample to get the optimal strategy of the last critic. We do this to follow the principle of Thompson sampling: making decisions based on the sampled value prediction model. The policy gradient with posterior sampled critic can estimated following Equation \ref{eq:acpg}, which similar to \cite{dropoutInference}.
+The actor-critic algorithm using SLGD is shown in Algorithm \ref{alg:sgldac}. SGLD continuously sample Critic $V(s|\theta^V)$ in training process, so the last critic in the network is a sample following $p(\theta^V|D)$ at any time. In the rollout phase, the current actor $\pi$ is copied to $\tilde\pi$, then update $\tilde\pi$ use the policy gradient generated by the last critic. In the actor-critic algorithm, the critic does not make decisions directly, so we optimize the copy of the current actor with the last critic sample to get the optimal strategy of the last critic. We do this to follow the principle of Thompson sampling: making decisions based on the sampled value prediction model. The policy gradient with posterior sampled critics can be estimated by following Equation \ref{eq:acpg}, which similar to \cite{dropoutInference}.
 \begin{equation}
    \label{eq:acpg} 
    \begin{aligned}
    \nabla_{\theta^\pi}\mathbb{E}[L^\mu|D] = \mathbb{E}_{s_t\sim\rho,a_t\sim\pi,\theta^V\sim p(\theta^V|D)}[\nabla_{\theta^\pi}L^\pi]\\
    \end{aligned}
 \end{equation}
-Now we confirm the sanity check as \cite{osband2018randomized} one by one: \textbf{Posterior Concentration}: As described in Section \ref{sec:samplecritic}, the intensity of the noise term and prior term will be weaker as more data is observed, and the distribution of critic will concentrate to the maximum likelihood estimation. \textbf{Multi-step Uncertainty}: The uncertainty of critic will be propagated throught the bootstrap value estimation target $R$. \textbf{Epistemic vs Aleatoric}: The SGLD sampler does posterior sampling following $p(\theta^V|D)$ instead of $p(r_t|s_t,a_T)$. \textbf{Task-appropriate}: The SGLD sampler does posterior sampling in parameter space instead of state-action space which is related to the environment. \textbf{Intrinsic motivation}: Even in the zero reward environment, the SGLD sampler can give non-zero value estimation on unseen states. These analyses demonstrate that SGLD based exploration strategy can effectively overcome the shortcomings of existing exploration strategies.
+Now we confirm the sanity check as \cite{osband2018randomized} one by one: \textbf{Posterior Concentration}: As described in Section \ref{sec:samplecritic}, the intensity of the noise term and the prior term will be weaker as more data is observed, and the distribution of critic will concentrate to the maximum likelihood estimation. \textbf{Multi-step Uncertainty}: The uncertainty of critic will be propagated through the bootstrap value estimation target $R$. \textbf{Epistemic vs Aleatoric}: The SGLD sampler does posterior sampling following $p(\theta^V|D)$ instead of $p(r_t|s_t,a_T)$. \textbf{Task-appropriate}: The SGLD sampler does posterior sampling in parameter space instead of state-action space which is related to the environment. \textbf{Intrinsic motivation}: Even in the zero reward environment, the SGLD sampler can give non-zero value estimation on unseen states. These analyses demonstrate that the SGLD based exploration strategy can effectively overcome the shortcomings of existing exploration strategies.
